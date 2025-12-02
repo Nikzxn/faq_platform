@@ -1,0 +1,10 @@
+Django~=5.2.1
+channels
+xhtml2pdf
+qdrant-client~=1.14.2
+psycopg2-binary
+whitenoise
+uvicorn[standard]
+gigachat
+requests
+aiohttp
