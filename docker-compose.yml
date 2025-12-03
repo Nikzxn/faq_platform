@@ -1,0 +1,19 @@
+services:
+  web:
+    build: .
+    image: rostelecom-chat-app
+    container_name: rostelecom-chat-app
+    restart: always
+    environment:
+      - GIGATOKEN=OWZiNzRmNzItYTM4YS00ZjdhLTgzOGQtMTQ0ODg4YmVjNzU0OmIwNzVjNzFmLTlhNzgtNDkxOC04Y2U4LTFlOWQzNDY4MDNlZQ==
+    ports:
+      - "80:8000"
+    volumes:
+      - ./static:/app/static
+      - ./templates:/app/template
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
