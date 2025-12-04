@@ -1,0 +1,752 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель оператора</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Базовые стили */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #1d1d1f;
+        }
+
+        /* Шапка */
+        .header {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-logout {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .username {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background-color: #ff6b35;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #e65a26;
+        }
+
+        /* Основной контейнер */
+        .operator-panel {
+            display: flex;
+            height: calc(100vh - 80px);
+            min-width: 80vw;
+            max-width: 1000px;
+            margin: 0 auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Список чатов */
+        .chats-list {
+            width: 250px;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            background-color: #f8f8f8;
+            flex-shrink: 0;
+        }
+
+        .chats-list h3 {
+            padding: 16px;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        /* Стили для чатов с датой */
+        .chat-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .chat-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .chat-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .chat-info {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .chat-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .chat-item.active {
+            background-color: #6b31ee;
+            color: white;
+        }
+
+        .chat-item.active .chat-date,
+        .chat-item.active .chat-info {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Окно чата */
+        .chat-window {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f8f8;
+        }
+
+        /* Панель управления чатом */
+        .chat-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .chat-info-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-chat-id {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .current-chat-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .close-chat-btn {
+            background-color: #ff6b35;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-chat-btn:hover {
+            background-color: #e65a26;
+            transform: translateY(-2px);
+        }
+
+        /* История чата */
+        #chat-history {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #chat-history p {
+            text-align: center;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        /* Пузыри сообщений */
+        .bubble {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-size: 15px;
+            white-space: pre-wrap;
+        }
+
+        .bubble.user {
+            align-self: flex-end;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+        }
+
+        .bubble.bot {
+            align-self: flex-start;
+            background-color: #6b31ee;
+            color: white;
+        }
+
+        /* Контролы оператора */
+        .operator-controls {
+            padding: 15px 20px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Форма отправки */
+        .chat-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-form input {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 30px;
+            outline: none;
+            background-color: #f8f8f8;
+        }
+
+        /* Кнопка отправки */
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            background: #6b31ee;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #5b29d1;
+        }
+
+        .arrow {
+            position: relative;
+            width: 24px;
+            height: 24px;
+        }
+
+        .arrow::before {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 2px;
+            background-color: white;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+        }
+
+        .arrow::after {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid white;
+            border-right: 2px solid white;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        /* Панель шаблонов ответов */
+        .templates-panel {
+            width: 300px;
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+            background-color: #f8f8f8;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .templates-panel h3 {
+            padding: 16px;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        /* ИЗМЕНЕНО: Добавлен заголовок статуса */
+        .templates-panel .status {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+            background-color: #f0f0f0;
+        }
+
+        .templates-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .template-bubble {
+            background-color: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .template-bubble:hover {
+            background-color: #e8e8e8;
+            border-color: #ccc;
+        }
+
+        .template-bubble.primary {
+            background-color: #6b31ee;
+            color: white;
+            border-color: #6b31ee;
+        }
+
+        .template-bubble.primary:hover {
+            background-color: #5b29d1;
+        }
+
+        .template-bubble.orange {
+            background-color: #d85233;
+            color: white;
+            border-color: #d85233;
+        }
+
+        .template-bubble.orange:hover {
+            background-color: #c64a2e;
+        }
+
+        /* Пустой чат */
+        .no-chat-selected {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .no-chat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h2>Панель оператора</h2>
+    <div class="user-logout">
+        <span class="username">{{ request.user.username }}</span>
+        <a href="{% url 'logout' %}" class="logout-btn">Выйти</a>
+    </div>
+</header>
+<main class="operator-panel">
+    <div class="chats-list">
+        <h3>Активные чаты</h3>
+        {% for item in chat_data %}
+            <div class="chat-item" data-chat-id="{{ item.chat.id }}" data-created-at="{{ item.created_at|date:'c' }}">
+                <div class="chat-header">
+                    <span class="chat-title">Чат {{ item.chat.id|truncatechars:10 }}</span>
+                    <span class="chat-date">{{ item.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+                <div class="chat-info">Сообщений: {{ item.message_count }}</div>
+            </div>
+        {% empty %}
+            <p style="padding: 20px; color: #888;">Нет активных чатов</p>
+        {% endfor %}
+    </div>
+
+    <div class="chat-window">
+        <!-- Добавляем панель управления чатом -->
+        <div class="chat-controls" id="chat-controls" style="display: none;">
+            <div class="chat-info-panel">
+                <span class="current-chat-id" id="current-chat-id">Чат не выбран</span>
+                <span class="current-chat-date" id="current-chat-date"></span>
+            </div>
+            <button class="close-chat-btn" id="close-chat-btn">Закрыть чат</button>
+        </div>
+
+        <div id="chat-history" class="chat-flow">
+            <div class="no-chat-selected">
+                <div class="no-chat-icon">💬</div>
+                <p>Выберите чат из списка слева</p>
+            </div>
+        </div>
+        <div class="operator-controls">
+            <form id="operator-chat-form" class="chat-form" autocomplete="off" novalidate>
+                {% csrf_token %}
+                <input id="operator-message" name="message" type="text" placeholder="Введите сообщение для клиента…"
+                       required>
+                <button type="submit" class="send-btn" aria-label="Отправить"><span class="arrow"></span></button>
+            </form>
+        </div>
+    </div>
+
+    <div class="templates-panel">
+        <h3>Шаблоны ответов</h3>
+        <!-- ИЗМЕНЕНО: Добавлен статус для отображения контекста предлагаемых ответов -->
+        <div id="templates-status" class="status">Стандартные шаблоны ответов</div>
+        <!-- ИЗМЕНЕНО: Содержимое будет динамически обновляться -->
+        <div id="templates-list" class="templates-list">
+            <div class="template-bubble primary">
+                Добрый день! Благодарим за обращение в службу поддержки. Чем я могу вам помочь?
+            </div>
+            <div class="template-bubble orange">
+                Для уточнения деталей по вашему вопросу, пожалуйста, укажите номер лицевого счета или номер телефона.
+            </div>
+            <div class="template-bubble">
+                Понял вашу проблему. Давайте рассмотрим возможные решения.
+            </div>
+            <div class="template-bubble">
+                Спасибо за ваше терпение. Информация по вашему вопросу уже получена. Сейчас я подробно всё объясню.
+            </div>
+            <div class="template-bubble">
+                Мне необходимо уточнить некоторые детали для решения вашего вопроса. Подскажите, пожалуйста...
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chatItems = document.querySelectorAll('.chat-item');
+        const chatHistory = document.getElementById('chat-history');
+        const operatorForm = document.getElementById('operator-chat-form');
+        const operatorInput = document.getElementById('operator-message');
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // ИЗМЕНЕНО: Новые переменные для работы с шаблонами
+        const templatesList = document.getElementById('templates-list');
+        const templatesStatus = document.getElementById('templates-status');
+
+        // Новые переменные для управления чатом
+        const chatControls = document.getElementById('chat-controls');
+        const currentChatId = document.getElementById('current-chat-id');
+        const currentChatDate = document.getElementById('current-chat-date');
+        const closeChatBtn = document.getElementById('close-chat-btn');
+
+        let currentSelectedChatId = null;
+        let socket = null;
+        let lastUserMessage = null; // НОВОЕ: Для хранения последнего сообщения пользователя
+
+        // Функция для создания пузыря сообщения
+        const bubble = (txt, side) => {
+            const div = document.createElement('div');
+            div.className = `bubble ${side}`;
+            div.textContent = txt;
+            return div;
+        };
+
+        // НОВОЕ: Функция для создания шаблона ответа
+        const createTemplateBubble = (text, className = '') => {
+            const div = document.createElement('div');
+            div.className = `template-bubble ${className}`;
+            div.textContent = text;
+
+            // НОВОЕ: Обработчик клика на шаблон
+            div.addEventListener('click', function () {
+                // Устанавливаем текст в поле ввода
+                operatorInput.value = text;
+                // Отправляем форму
+                operatorForm.dispatchEvent(new Event('submit'));
+            });
+
+            return div;
+        };
+
+        // НОВОЕ: Функция для загрузки предлагаемых ответов
+        const loadSuggestedResponses = async (chatId) => {
+            try {
+                const res = await fetch(`/chat/${chatId}/suggestions/`, {
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    },
+                    credentials: 'same-origin',
+                });
+
+                const data = await res.json();
+
+                // Очищаем список шаблонов
+                templatesList.innerHTML = '';
+
+                // Обновляем статус
+                templatesStatus.textContent = 'Предлагаемые ответы на последнее сообщение';
+
+                // Добавляем новые шаблоны
+                if (data.suggestions && data.suggestions.length > 0) {
+                    // Первые два шаблона делаем выделенными
+                    if (data.suggestions.length >= 1) {
+                        templatesList.appendChild(createTemplateBubble(data.suggestions[0], 'primary'));
+                    }
+                    if (data.suggestions.length >= 2) {
+                        templatesList.appendChild(createTemplateBubble(data.suggestions[1], 'orange'));
+                    }
+
+                    // Остальные шаблоны обычные
+                    for (let i = 2; i < data.suggestions.length; i++) {
+                        templatesList.appendChild(createTemplateBubble(data.suggestions[i]));
+                    }
+                } else {
+                    // Если нет предлагаемых ответов, показываем сообщение
+                    templatesStatus.textContent = 'Нет предлагаемых ответов';
+                }
+            } catch (error) {
+                console.error('Error loading suggested responses:', error);
+                templatesStatus.textContent = 'Ошибка загрузки предлагаемых ответов';
+            }
+        };
+
+        // Функция закрытия чата
+        const closeChat = async () => {
+            console.log('Close chat button clicked');
+            if (!currentSelectedChatId) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/chat/${currentSelectedChatId}/close/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // Удаляем закрытый чат из списка
+                    const chatItem = document.querySelector(`.chat-item[data-chat-id="${currentSelectedChatId}"]`);
+                    if (chatItem) {
+                        chatItem.remove();
+                    }
+
+                    // Сбрасываем интерфейс чата
+                    currentSelectedChatId = null;
+                    chatHistory.innerHTML = `
+                        <div class="no-chat-selected">
+                            <div class="no-chat-icon">💬</div>
+                            <p>Выберите чат из списка слева</p>
+                        </div>
+                    `;
+                    chatControls.style.display = 'none';
+
+                    // Закрываем WebSocket соединение
+                    if (socket) {
+                        socket.close();
+                        socket = null;
+                    }
+
+                    // Показываем сообщение об успехе
+                    alert('Чат успешно закрыт');
+                } else {
+                    alert('Ошибка при закрытии чата: ' + (data.error || 'неизвестная ошибка'));
+                }
+            } catch (error) {
+                console.error('Error closing chat:', error);
+                alert('Ошибка при закрытии чата');
+            }
+        };
+
+        // Добавляем обработчик для кнопки закрытия чата
+        closeChatBtn.addEventListener('click', closeChat);
+
+        // Загрузка истории чата
+        const loadChatHistory = async (chatId) => {
+            try {
+                const res = await fetch(`/chat/${chatId}/history/`, {
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    },
+                    credentials: 'same-origin',
+                });
+                const data = await res.json();
+
+                // Проверяем, не закрыт ли чат
+                if (data.is_closed) {
+                    alert('Этот чат был закрыт. Пожалуйста, выберите другой чат.');
+
+                    // Удаляем закрытый чат из списка
+                    const chatItem = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+                    if (chatItem) {
+                        chatItem.remove();
+                    }
+
+                    return;
+                }
+
+                chatHistory.innerHTML = '';
+
+                // Отображаем панель управления чатом
+                chatControls.style.display = 'flex';
+                currentChatId.textContent = `Чат ${chatId.substring(0, 8)}...`;
+
+                // Получаем и форматируем дату создания из атрибута data-created-at
+                const chatItemElement = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+                if (chatItemElement && chatItemElement.dataset.createdAt) {
+                    const createdAt = new Date(chatItemElement.dataset.createdAt);
+                    currentChatDate.textContent = createdAt.toLocaleString();
+                }
+
+                // Переменная для хранения последнего сообщения пользователя
+                lastUserMessage = null;
+
+                data.messages.forEach(msg => {
+                    const side = msg.role === 'user' ? 'user' : 'bot';
+                    chatHistory.appendChild(bubble(msg.content, side));
+
+                    // НОВОЕ: Сохраняем последнее сообщение пользователя
+                    if (msg.role === 'user') {
+                        lastUserMessage = msg.content;
+                    }
+                });
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                // НОВОЕ: Загружаем предлагаемые ответы на основе последнего сообщения
+                if (lastUserMessage) {
+                    loadSuggestedResponses(chatId);
+                }
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+                chatHistory.innerHTML = '<p>Ошибка загрузки истории чата</p>';
+                chatControls.style.display = 'none';
+            }
+        };
+
+        // Подключение к WebSocket
+        const connectWebSocket = (chatId) => {
+            if (socket) {
+                socket.close();
+            }
+
+            socket = new WebSocket(`ws://${window.location.host}/ws/chat/${chatId}/`);
+
+            socket.onopen = () => {
+                console.log('WebSocket connected');
+            };
+
+            socket.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                const side = data.role === 'user' ? 'user' : 'bot';
+                chatHistory.appendChild(bubble(data.message, side));
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+
+                // НОВОЕ: Если получено новое сообщение от пользователя, обновляем предлагаемые ответы
+                if (data.role === 'user') {
+                    lastUserMessage = data.message;
+                    loadSuggestedResponses(currentSelectedChatId);
+                }
+            };
+
+            socket.onclose = () => {
+                console.log('WebSocket disconnected');
+            };
+        };
+
+        // Выбор чата
+        chatItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const chatId = this.dataset.chatId;
+
+                // Убираем активный класс у всех элементов
+                chatItems.forEach(i => i.classList.remove('active'));
+
+                // Добавляем активный класс выбранному элементу
+                this.classList.add('active');
+
+                // Обновляем текущий ID чата
+                currentSelectedChatId = chatId;
+
+                // Загружаем историю чата
+                loadChatHistory(chatId);
+
+                // Подключаемся к WebSocket
+                connectWebSocket(chatId);
+            });
+        });
+
+        // Отправка сообщения
+        operatorForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const message = operatorInput.value.trim();
+
+            if (!message || !currentSelectedChatId) {
+                return;
+            }
+
+            // Отправляем сообщение через WebSocket
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    message: message,
+                    role: 'assistant'
+                }));
+
+                // Очищаем поле ввода
+                operatorInput.value = '';
+            }
+        });
+
+        // НОВОЕ: Инициализация шаблонов
+        document.querySelectorAll('.template-bubble').forEach(template => {
+            template.addEventListener('click', function () {
+                operatorInput.value = this.textContent.trim();
+                operatorForm.dispatchEvent(new Event('submit'));
+            });
+        });
+    });
+</script>
+</body>
+</html>
