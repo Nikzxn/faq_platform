@@ -1,0 +1,658 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Учетные записи - Админ-панель{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tab {
+        padding: 12px 20px;
+        cursor: pointer;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .tab:hover {
+        color: #5d2eff;
+    }
+
+    .tab.active {
+        color: #5d2eff;
+        border-bottom-color: #5d2eff;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .add-user-btn {
+        display: flex;
+        align-items: center;
+    }
+
+    .add-user-btn i {
+        margin-right: 8px;
+    }
+
+    .user-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .user-status.active {
+        background-color: rgba(46, 204, 113, 0.1);
+        color: #2ecc71;
+    }
+
+    .user-status.inactive {
+        background-color: rgba(255, 71, 87, 0.1);
+        color: #ff4757;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 40px;
+        color: #ddd;
+        margin-bottom: 15px;
+    }
+
+    .empty-state-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .empty-state-text {
+        color: #999;
+        margin-bottom: 20px;
+    }
+
+    .edit-user-section {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Учетные записи</h1>
+
+<div class="tabs">
+    <div class="tab active" data-tab="operators">Операторы</div>
+    <div class="tab" data-tab="admins">Администраторы</div>
+</div>
+
+<div class="tab-content active" id="operators-tab">
+    <div class="section-header">
+        <h2 class="card-title">Список операторов</h2>
+        <button class="btn btn-primary add-user-btn" onclick="openModal('add-operator-modal')">
+            <i class="fas fa-plus"></i> Добавить оператора
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="table-container">
+            <table class="table" id="operators-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя пользователя</th>
+                        <th>Статус</th>
+                        <th>Дата создания</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="operators-list">
+                    <!-- Данные будут загружены с помощью JavaScript -->
+                    <tr>
+                        <td colspan="5" class="text-center">Загрузка...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="admins-tab">
+    <div class="section-header">
+        <h2 class="card-title">Список администраторов</h2>
+        <button class="btn btn-primary add-user-btn" onclick="openModal('add-admin-modal')">
+            <i class="fas fa-plus"></i> Добавить администратора
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="table-container">
+            <table class="table" id="admins-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя пользователя</th>
+                        <th>Статус</th>
+                        <th>Дата создания</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="admins-list">
+                    <!-- Данные будут загружены с помощью JavaScript -->
+                    <tr>
+                        <td colspan="5" class="text-center">Загрузка...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления оператора -->
+<div class="modal-overlay" id="add-operator-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Добавить оператора</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="add-operator-form">
+                <div class="form-group">
+                    <label for="operator-username">Имя пользователя *</label>
+                    <input type="text" id="operator-username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="operator-password">Пароль *</label>
+                    <input type="password" id="operator-password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="operator-password-confirm">Подтверждение пароля *</label>
+                    <input type="password" id="operator-password-confirm" class="form-control" required>
+                </div>
+                <p><small>* - обязательные поля</small></p>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+            <button class="btn btn-primary" id="add-operator-submit">Создать</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления администратора -->
+<div class="modal-overlay" id="add-admin-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Добавить администратора</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="add-admin-form">
+                <div class="form-group">
+                    <label for="admin-username">Имя пользователя *</label>
+                    <input type="text" id="admin-username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="admin-password">Пароль *</label>
+                    <input type="password" id="admin-password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="admin-password-confirm">Подтверждение пароля *</label>
+                    <input type="password" id="admin-password-confirm" class="form-control" required>
+                </div>
+                <p><small>* - обязательные поля</small></p>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+            <button class="btn btn-primary" id="add-admin-submit">Создать</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования пользователя -->
+<div class="modal-overlay" id="edit-user-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Редактировать пользователя</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <input type="hidden" id="edit-user-type">
+
+                <div class="edit-user-section">
+                    <div class="form-group">
+                        <label for="edit-username">Имя пользователя *</label>
+                        <input type="text" id="edit-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-user-status">Статус</label>
+                        <select id="edit-user-status" class="form-control">
+                            <option value="true">Активен</option>
+                            <option value="false">Неактивен</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="edit-user-section">
+                    <h4 class="edit-section-title">Изменить пароль</h4>
+                    <div class="form-group">
+                        <label for="edit-password">Новый пароль</label>
+                        <input type="password" id="edit-password" class="form-control">
+                        <small class="text-muted">Оставьте пустым, если не хотите менять пароль</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-password-confirm">Подтверждение пароля</label>
+                        <input type="password" id="edit-password-confirm" class="form-control">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+            <button class="btn btn-primary" id="edit-user-submit">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal-overlay" id="delete-user-modal">
+    <div class="modal" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Подтверждение удаления</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Вы уверены, что хотите удалить этого пользователя?</p>
+            <p>Это действие нельзя будет отменить.</p>
+            <input type="hidden" id="delete-user-id">
+            <input type="hidden" id="delete-user-type">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+            <button class="btn btn-danger" id="delete-user-submit">Удалить</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Переключение табов
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Удаляем активный класс у всех табов
+                tabs.forEach(t => t.classList.remove('active'));
+                // Добавляем активный класс нажатому табу
+                this.classList.add('active');
+
+                // Скрываем все вкладки
+                const tabContents = document.querySelectorAll('.tab-content');
+                tabContents.forEach(tc => tc.classList.remove('active'));
+
+                // Показываем выбранную вкладку
+                const tabId = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Функция загрузки данных пользователей
+        async function loadUsers() {
+            try {
+                const response = await fetch('/admin/api/staff/');
+                const data = await response.json();
+
+                // Заполняем таблицу операторов
+                const operatorsList = document.getElementById('operators-list');
+                operatorsList.innerHTML = '';
+
+                if (data.operators && data.operators.length > 0) {
+                    data.operators.forEach(operator => {
+                        operatorsList.innerHTML += `
+                            <tr>
+                                <td>${operator.id}</td>
+                                <td>${operator.username}</td>
+                                <td><span class="user-status ${operator.active ? 'active' : 'inactive'}">${operator.active ? 'Активен' : 'Неактивен'}</span></td>
+                                <td>${operator.created_at}</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-icon btn-secondary" title="Редактировать" onclick="editUser(${operator.id}, 'operator')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-danger" title="Удалить" onclick="confirmDeleteUser(${operator.id}, 'operator')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    operatorsList.innerHTML = `
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fas fa-user-slash"></i>
+                                    </div>
+                                    <h4 class="empty-state-title">Нет операторов</h4>
+                                    <p class="empty-state-text">Операторы еще не добавлены в систему.</p>
+                                    <button class="btn btn-primary" onclick="openModal('add-operator-modal')">
+                                        <i class="fas fa-plus"></i> Добавить оператора
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                // Заполняем таблицу администраторов
+                const adminsList = document.getElementById('admins-list');
+                adminsList.innerHTML = '';
+
+                if (data.admins && data.admins.length > 0) {
+                    data.admins.forEach(admin => {
+                        adminsList.innerHTML += `
+                            <tr>
+                                <td>${admin.id}</td>
+                                <td>${admin.username}</td>
+                                <td><span class="user-status ${admin.active ? 'active' : 'inactive'}">${admin.active ? 'Активен' : 'Неактивен'}</span></td>
+                                <td>${admin.created_at}</td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-icon btn-secondary" title="Редактировать" onclick="editUser(${admin.id}, 'admin')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-danger" title="Удалить" onclick="confirmDeleteUser(${admin.id}, 'admin')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    adminsList.innerHTML = `
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                    <h4 class="empty-state-title">Нет администраторов</h4>
+                                    <p class="empty-state-text">Администраторы еще не добавлены в систему.</p>
+                                    <button class="btn btn-primary" onclick="openModal('add-admin-modal')">
+                                        <i class="fas fa-plus"></i> Добавить администратора
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification('error', 'Ошибка', 'Не удалось загрузить список пользователей');
+            }
+        }
+
+        // Функция для редактирования пользователя
+        window.editUser = async function(id, userType) {
+            try {
+                const response = await fetch(`/admin/api/staff/${id}/`);
+                if (!response.ok) {
+                    throw new Error('Не удалось получить данные пользователя');
+                }
+
+                const userData = await response.json();
+
+                // Заполняем форму редактирования
+                document.getElementById('edit-user-id').value = userData.id;
+                document.getElementById('edit-user-type').value = userData.user_type;
+                document.getElementById('edit-username').value = userData.username;
+                document.getElementById('edit-user-status').value = userData.active.toString();
+
+                // Очищаем поля пароля
+                document.getElementById('edit-password').value = '';
+                document.getElementById('edit-password-confirm').value = '';
+
+                // Открываем модальное окно
+                openModal('edit-user-modal');
+
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                showNotification('error', 'Ошибка', 'Не удалось загрузить данные пользователя');
+            }
+        };
+
+        // Функция для подтверждения удаления пользователя
+        window.confirmDeleteUser = function(id, userType) {
+            document.getElementById('delete-user-id').value = id;
+            document.getElementById('delete-user-type').value = userType;
+            openModal('delete-user-modal');
+        };
+
+        // Загружаем пользователей при загрузке страницы
+        loadUsers();
+
+        // Обработчик формы добавления оператора
+        document.getElementById('add-operator-submit').addEventListener('click', async function() {
+            const username = document.getElementById('operator-username').value.trim();
+            const password = document.getElementById('operator-password').value;
+            const passwordConfirm = document.getElementById('operator-password-confirm').value;
+
+            // Проверяем обязательные поля
+            if (!username) {
+                showNotification('error', 'Ошибка', 'Пожалуйста, введите имя пользователя');
+                return;
+            }
+
+            if (!password) {
+                showNotification('error', 'Ошибка', 'Пожалуйста, введите пароль');
+                return;
+            }
+
+            // Проверяем совпадение паролей
+            if (password !== passwordConfirm) {
+                showNotification('error', 'Ошибка', 'Пароли не совпадают');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/staff/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        user_type: 'operator',
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', 'Успех', 'Оператор успешно добавлен');
+                    closeModal('add-operator-modal');
+                    document.getElementById('add-operator-form').reset();
+                    loadUsers();
+                } else {
+                    showNotification('error', 'Ошибка', data.error || 'Не удалось добавить оператора');
+                }
+            } catch (error) {
+                console.error('Error adding operator:', error);
+                showNotification('error', 'Ошибка', 'Не удалось добавить оператора');
+            }
+        });
+
+        // Обработчик формы добавления администратора
+        document.getElementById('add-admin-submit').addEventListener('click', async function() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value;
+            const passwordConfirm = document.getElementById('admin-password-confirm').value;
+
+            // Проверяем обязательные поля
+            if (!username) {
+                showNotification('error', 'Ошибка', 'Пожалуйста, введите имя пользователя');
+                return;
+            }
+
+            if (!password) {
+                showNotification('error', 'Ошибка', 'Пожалуйста, введите пароль');
+                return;
+            }
+
+            // Проверяем совпадение паролей
+            if (password !== passwordConfirm) {
+                showNotification('error', 'Ошибка', 'Пароли не совпадают');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/staff/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        user_type: 'admin',
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', 'Успех', 'Администратор успешно добавлен');
+                    closeModal('add-admin-modal');
+                    document.getElementById('add-admin-form').reset();
+                    loadUsers();
+                } else {
+                    showNotification('error', 'Ошибка', data.error || 'Не удалось добавить администратора');
+                }
+            } catch (error) {
+                console.error('Error adding admin:', error);
+                showNotification('error', 'Ошибка', 'Не удалось добавить администратора');
+            }
+        });
+
+        // Обработчик формы редактирования пользователя
+        document.getElementById('edit-user-submit').addEventListener('click', async function() {
+            const userId = document.getElementById('edit-user-id').value;
+            const userType = document.getElementById('edit-user-type').value;
+            const username = document.getElementById('edit-username').value.trim();
+            const active = document.getElementById('edit-user-status').value === 'true';
+            const password = document.getElementById('edit-password').value;
+            const passwordConfirm = document.getElementById('edit-password-confirm').value;
+
+            // Проверяем обязательные поля
+            if (!username) {
+                showNotification('error', 'Ошибка', 'Пожалуйста, введите имя пользователя');
+                return;
+            }
+
+            // Проверяем совпадение паролей, если указан новый пароль
+            if (password && password !== passwordConfirm) {
+                showNotification('error', 'Ошибка', 'Пароли не совпадают');
+                return;
+            }
+
+            try {
+                const userData = {
+                    username: username,
+                    active: active,
+                    user_type: userType
+                };
+
+                // Добавляем пароль, только если он указан
+                if (password) {
+                    userData.password = password;
+                }
+
+                const response = await fetch(`/admin/api/staff/${userId}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', 'Успех', 'Данные пользователя успешно обновлены');
+                    closeModal('edit-user-modal');
+                    loadUsers();
+                } else {
+                    showNotification('error', 'Ошибка', data.error || 'Не удалось обновить данные пользователя');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                showNotification('error', 'Ошибка', 'Не удалось обновить данные пользователя');
+            }
+        });
+
+        // Обработчик удаления пользователя
+        document.getElementById('delete-user-submit').addEventListener('click', async function() {
+            const userId = document.getElementById('delete-user-id').value;
+            const userType = document.getElementById('delete-user-type').value;
+
+            try {
+                const response = await fetch(`/admin/api/staff/${userId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('success', 'Успех', `${userType === 'admin' ? 'Администратор' : 'Оператор'} успешно удален`);
+                    closeModal('delete-user-modal');
+                    loadUsers();
+                } else {
+                    showNotification('error', 'Ошибка', data.error || 'Не удалось удалить пользователя');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showNotification('error', 'Ошибка', 'Не удалось удалить пользователя');
+            }
+        });
+    });
+</script>
+{% endblock %}
