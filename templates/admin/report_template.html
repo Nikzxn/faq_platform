@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет по работе чат-бота Ростелеком</title>
+    <style>
+        @font-face {
+            font-family: DejaVuSans;
+            src: url({{ static_url }}fonts/DejaVuSans.ttf);
+        }
+        body {
+            font-family: DejaVuSans, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 18px;
+            text-align: center;
+        }
+        h2 {
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table, th, td {
+            border: 1px solid #999;
+        }
+        th {
+            background-color: #f0f0f0;
+            padding: 5px;
+            text-align: center;
+        }
+        td {
+            padding: 5px;
+            text-align: center;
+        }
+        td.left-align {
+            text-align: left;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Отчет по работе чат-бота Ростелеком</h1>
+    <p>Дата формирования: {{ current_date }}</p>
+
+    <h2>Общая статистика чатов</h2>
+    <table>
+        <tr>
+            <th>Показатель</th>
+            <th>Значение</th>
+        </tr>
+        <tr>
+            <td class="left-align">Всего чатов</td>
+            <td>{{ stats.total_chats }}</td>
+        </tr>
+        <tr>
+            <td class="left-align">Активные чаты</td>
+            <td>{{ stats.active_chats }}</td>
+        </tr>
+        <tr>
+            <td class="left-align">Закрытые чаты</td>
+            <td>{{ stats.closed_chats }}</td>
+        </tr>
+        <tr>
+            <td class="left-align">Среднее время ответа</td>
+            <td>{{ stats.avg_response_time }}</td>
+        </tr>
+    </table>
+
+    <h2>Статистика чатов по дням</h2>
+    <table>
+        <tr>
+            <th>Дата</th>
+            <th>Новые чаты</th>
+            <th>Закрытые чаты</th>
+        </tr>
+        {% for day in stats.daily_stats %}
+        <tr>
+            <td>{{ day.date }}</td>
+            <td>{{ day.new_chats }}</td>
+            <td>{{ day.closed_chats }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p>На основе представленных данных можно сделать следующие выводы:</p>
+    <p>1. Всего в системе {{ stats.total_chats }} чатов, из которых {{ stats.active_chats }} активные и {{ stats.closed_chats }} закрытые.</p>
+    <p>2. Среднее время ответа оператора составляет {{ stats.avg_response_time }}.</p>
+    <p>3. За последний период наблюдается {{ trend }} количества новых чатов.</p>
+
+    <div class="footer">
+        Отчет сгенерирован автоматически системой Ростелеком. {{ current_date }}
+    </div>
+</body>
+</html>
