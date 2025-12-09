@@ -21,7 +21,7 @@ from django.views import View
 from django.views.generic import TemplateView
 from qdrant_client.http.models import PointIdsList
 from qdrant_client.models import PointStruct
-from xhtml2pdf import pisa
+
 
 from app.models import Chat, Message
 from assistant import Assistant
@@ -431,16 +431,9 @@ class AdminGeneratePDFView(LoginRequiredMixin, UserPassesTestMixin, View):
         html = template.render(context_dict)
         result = io.BytesIO()
 
-        pdf = pisa.pisaDocument(
-            io.BytesIO(html.encode("UTF-8")),
-            result,
-            encoding='utf-8',
-            link_callback=lambda uri, rel: os.path.join(settings.BASE_DIR, uri.replace(settings.STATIC_URL, 'static/'))
-        )
 
-        if not pdf.err:
-            return result.getvalue()
-        return None
+
+
 
     def create_pdf(self, stats):
         trend = 'рост' if stats['daily_stats'][-1]['new_chats'] > stats['daily_stats'][0]['new_chats'] else 'снижение'

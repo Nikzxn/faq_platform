@@ -8,8 +8,12 @@ from functools import wraps
 
 import aiohttp
 import requests
-from gigachat.models.assistants import Assistant
 from qdrant_client import QdrantClient
+
+try:
+    from gigachat.models.assistants import Assistant as GigachatAssistant  # noqa: F401
+except ModuleNotFoundError:
+    GigachatAssistant = None
 
 
 class Assistant:
@@ -37,8 +41,9 @@ class Assistant:
         qdrant_host = os.getenv("QDRANT_HOST", "qdrant")
         qdrant_port = os.getenv("QDRANT_PORT", "6333")
         qdrant_url = os.getenv("QDRANT_URL", f"http://{qdrant_host}:{qdrant_port}")
+        use_memory_qdrant = os.getenv("QDRANT_IN_MEMORY") == "1"
 
-        self.__qdrant = QdrantClient(url=qdrant_url)
+        self.__qdrant = QdrantClient(":memory:") if use_memory_qdrant else QdrantClient(url=qdrant_url)
         self.__collection = os.getenv("QDRANT_COLLECTION", "que")
 
         self.__gigatoken = os.getenv("GIGATOKEN", None)
@@ -63,7 +68,6 @@ class Assistant:
         self.__access_token = response["access_token"]
         self.__expires_at = datetime.fromtimestamp(response["expires_at"] / 1000, timezone.utc)
 
-    @staticmethod
     def authorized(func):
         @wraps(func)
         async def wrapper(self, *args, **kwargs):
