@@ -10,10 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
 
 from assistant import Assistant
 
@@ -84,11 +84,11 @@ ASGI_APPLICATION = 'DjangoProject.asgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": "185.5.248.13",
-        "PORT": 5432,
-        "NAME": "chat_db",
-        "USER": "chat_user",
-        "PASSWORD": "strong_psw",
+        "HOST": os.getenv("DATABASE_HOST", "postgres"),
+        "PORT": os.getenv("DATABASE_PORT", "5432"),
+        "NAME": os.getenv("DATABASE_NAME", "chat_db"),
+        "USER": os.getenv("DATABASE_USER", "chat_user"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD", "strong_psw"),
         "CONN_MAX_AGE": 60,
         "OPTIONS": {
             "client_encoding": "UTF8"
@@ -159,5 +159,9 @@ ADMIN_REDIRECT_URL = '/admin/'  # Куда идет админ после вхо
 LOGOUT_REDIRECT_URL = '/login/'  # URL для перенаправления после выхода из системы
 
 assistant = Assistant()
-QDRANT = QdrantClient(url="http://185.5.248.13:6333")
-COLLECTION = "que"
+QDRANT_HOST = os.getenv("QDRANT_HOST", "qdrant")
+QDRANT_PORT = os.getenv("QDRANT_PORT", "6333")
+QDRANT_URL = os.getenv("QDRANT_URL", f"http://{QDRANT_HOST}:{QDRANT_PORT}")
+
+QDRANT = QdrantClient(url=QDRANT_URL)
+COLLECTION = os.getenv("QDRANT_COLLECTION", "que")

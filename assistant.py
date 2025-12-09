@@ -34,7 +34,12 @@ class Assistant:
         self.__queue = []
         self.__authurl = "https://ngw.devices.sberbank.ru:9443/api/v2"
         self.__baseurl = "https://gigachat.devices.sberbank.ru/api/v1"
-        self.__qdrant = QdrantClient(url="http://185.5.248.13:6333")
+        qdrant_host = os.getenv("QDRANT_HOST", "qdrant")
+        qdrant_port = os.getenv("QDRANT_PORT", "6333")
+        qdrant_url = os.getenv("QDRANT_URL", f"http://{qdrant_host}:{qdrant_port}")
+
+        self.__qdrant = QdrantClient(url=qdrant_url)
+        self.__collection = os.getenv("QDRANT_COLLECTION", "que")
 
         self.__gigatoken = os.getenv("GIGATOKEN", None)
         if not self.__gigatoken:
@@ -111,7 +116,7 @@ class Assistant:
 
         query_vec = await self.get_embedding(message)
         hits = self.__qdrant.query_points(
-            collection_name="que",
+            collection_name=self.__collection,
             query=query_vec,
             limit=5,
             with_payload=True,
@@ -179,7 +184,7 @@ class Assistant:
     async def answers(self, message: str) -> list[str]:
         query_vec = await self.get_embedding(message)
         hits = self.__qdrant.query_points(
-            collection_name="que",
+            collection_name=self.__collection,
             query=query_vec,
             limit=10,
             with_payload=True,
