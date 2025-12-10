@@ -95,7 +95,7 @@ def main():
     qdrant = QdrantClient(url=qdrant_url)
     assistant = Assistant()
 
-    # asyncio.run(upload_knowledge_db(qdrant, assistant))
+    asyncio.run(upload_knowledge_db(qdrant, assistant))
 
     create_superuser(
         username="admin",
