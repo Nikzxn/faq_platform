@@ -25,6 +25,7 @@ services:
     volumes:
       - ./static:/app/static
       - ./templates:/app/template
+      - ./app/tests:/app/tests
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 30s

@@ -8,3 +8,6 @@ gigachat
 requests
 aiohttp
 pandas
+pytest
+pytest-asyncio
+playwright
