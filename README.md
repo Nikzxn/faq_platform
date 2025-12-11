@@ -11,7 +11,7 @@
 5. Мельников Владимир Николаевич - 5130904/30101
 
 ## Ссылки
-- Репозиторий: https://github.com/Nikzxn/support_platform
+- Репозиторий: https://github.com/Nikzxn/faq_platform
 - Деплой: локальный или удаленный запуск через Docker Compose.
 
 ## Оглавление
